@@ -1,7 +1,7 @@
-GroesseFensterX	800
-GroesseFensterY	800
+GroesseFensterX	1200
+GroesseFensterY	1200
 XEcke	50
 YEcke	50
 AnzahlReihen	20
-Laenge	6
+Laenge	8
 Wartezeit	500

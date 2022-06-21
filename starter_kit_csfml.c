@@ -1,6 +1,5 @@
-/* main-Datei als Template für ein Projekt mit der Bibliothek CSFML
+/* 
 
-verwendet:
 CSFML-2.5.1-windows-32-bit
 ISO C11 Standard
 
@@ -20,22 +19,17 @@ Das Programm kann mit der Esc-Taste beendet werden
 #include <string.h>
 
 
-
-
-
-
-
-
 typedef struct {
 	sfRectangleShape* game_element;
 	sfVector2f element_position;
+	
 } Boardpiece;
 
 typedef struct {
 	int snakexpos;
 	int snakeypos;
 	int snake_length;// Länge der Schlange
-	sfColor Body; //
+	
 } Snakepiece;
 
 typedef struct {
@@ -52,14 +46,20 @@ typedef struct {
 	int edge_distance_y; // Abestand vom Rand minus extra für die Schwarze umrandung Y
 	int element_width; // Größer eines Boards
 	sfVector2f element_size;
+
+	sfColor red;
+	sfColor body;
+	sfColor head;
+	sfColor gras;
+
 } Config;
 
 //Funktionsprototypen:
 void waitdt_ms(double  tt_ms); //Funktion wartet tt_ms und wird dann wieder verlassen
 int color_compare(sfColor, sfColor); // Vergleicht zwei Farben des Boardes
-int game_over();
+int game_over(sfRenderWindow* window, char txt_buffer);
 struct Config* get_config();
-void Pause(sfRenderWindow* Tewst);
+void Pause(sfRenderWindow* );
 Boardpiece** build_board(Config* config);
 Snakepiece* build_snake(Config* config, Boardpiece** board);
 
@@ -71,6 +71,7 @@ int main()
 	_Bool control;
 
 
+	//sfColor rand= sfColor_fromRGB(250, 250, 25);
 	sfColor Color; // Varibale zum Farbvergleich	
 	
 	sfRenderWindow* window;   //über diese Zeigervariable kann im Programm auf den Grafigausgabebereich zugegriffen werden
@@ -96,8 +97,7 @@ int main()
 	control = 0;
 	direction = 2;
 	Leertaste = 0;
-	sfColor Body = sfColor_fromRGB(255, 204, 229);
-
+	
 	Boardpiece** board = build_board(config);
 	Snakepiece* snake = build_snake(config,board);
 	snake->snake_length = config->init_snake_length;
@@ -112,11 +112,11 @@ int main()
 		food.foodypos = config->row / 2 - 3;
 
 		Color = sfRectangleShape_getFillColor(board[food.foodypos][food.foodxpos].game_element);
-		if (color_compare(sfGreen, Color) == 1)
+		if (color_compare(config->gras, Color) == 1)
 			control = 1;
 	}
 
-	sfRectangleShape_setFillColor(board[food.foodypos][food.foodxpos].game_element, sfRed); // Anzeige Food
+	sfRectangleShape_setFillColor(board[food.foodypos][food.foodxpos].game_element, config->red); // Anzeige Food
 
 
 	char txt_buffer[10];//Stringvariable in der das Umwandlungsergebis des numerischen x-Wertes in einem String zwischengespeichert wird
@@ -150,10 +150,10 @@ int main()
 		sfRenderWindow_clear(window, sfBlack); //Bereinigen des Ausgabefensters (löschen des alte "Frames")
 
 
-		if (snake->snake_length == config->init_snake_length) // hart unschön gelöst, muss anfangslänge der Snake entsprechen
-			sfRectangleShape_setFillColor(board[snake[snake->snake_length - 1].snakeypos][snake[snake->snake_length - 1].snakexpos].game_element, sfGreen); // bei zwei gehts, aber letzte wird nicht gelöscht Letztes Feld nach schlange wieder grün
+		if (snake->snake_length == config->init_snake_length) // hart unschön gelöst, muss Anfangslänge der Snake entsprechen
+			sfRectangleShape_setFillColor(board[snake[snake->snake_length - 1].snakeypos][snake[snake->snake_length - 1].snakexpos].game_element,config->gras); // bei zwei gehts, aber letzte wird nicht gelöscht Letztes Feld nach schlange wieder grün
 		else
-			sfRectangleShape_setFillColor(board[snake[snake->snake_length - 2].snakeypos][snake[snake->snake_length - 2].snakexpos].game_element, sfGreen);
+			sfRectangleShape_setFillColor(board[snake[snake->snake_length - 2].snakeypos][snake[snake->snake_length - 2].snakexpos].game_element,config->gras);
 
 		// restlicher Körper
 		for (int i = snake-> snake_length - 1; i > 0; i--)
@@ -184,15 +184,15 @@ int main()
 		//CHANGE: Ändern der Eigenschaften der Element
 
 		// Bewegen der Schlange, von hinten nach vorne; Überprüfen, ob Apfel, Wand oder Schlange über die Farbe mit externer Funktion
-		sfRectangleShape_setFillColor(board[snake[1].snakeypos][snake[1].snakexpos].game_element, Body);
+		sfRectangleShape_setFillColor(board[snake[1].snakeypos][snake[1].snakexpos].game_element, config->body);
 
 
 		Color = sfRectangleShape_getFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element);
-		if (color_compare(sfGreen, Color) == 1) // Kopf geht auf ein Grünes Boardelement: alles gut
-			sfRectangleShape_setFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element, sfBlue); // Anzeige Kopf
+		if (color_compare(config->gras, Color) == 1) // Kopf geht auf ein Grünes Boardelement: alles gut
+			sfRectangleShape_setFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element, config->head); // Anzeige Kopf
 
-		else if (color_compare(sfRed, Color) == 1) { // Kopf geht auf ein Rotes Boardelement: Schlange wird länger und neues Food wird gesetzt
-			sfRectangleShape_setFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element, sfBlue); // Anzeige Kopf
+		else if (color_compare(config->red, Color) == 1) { // Kopf geht auf ein Rotes Boardelement: Schlange wird länger und neues Food wird gesetzt
+			sfRectangleShape_setFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element, config->head); // Anzeige Kopf
 			snake->snake_length++;
 
 			config->waiting_time *= 0.95;
@@ -202,15 +202,27 @@ int main()
 				food.foodxpos = (rand() % (config->row - 3) + 2);
 				food.foodypos = (rand() % (config->row - 3) + 2);
 				Color = sfRectangleShape_getFillColor(board[food.foodypos][food.foodxpos].game_element);
-				if (color_compare(sfGreen, Color) == 1)
+				if (color_compare(config->gras, Color) == 1)
 					control = 1;
 			}
-			sfRectangleShape_setFillColor(board[food.foodypos][food.foodxpos].game_element, sfRed); // Anzeige Food
+			sfRectangleShape_setFillColor(board[food.foodypos][food.foodxpos].game_element, config->red); // Anzeige Food
 		}
 		else // Schlange fährt in ein Boardelement, wo sie nicht hin darf
-			if (game_over(window) == 1)
-				sfWindow_destroy(window);
+			if (game_over(window, txt_buffer) == 1) {
+				
+				for (int i = 0; i <= config->row; i++) {
+					free(board[i]);
+				}
+				free(board);
+				free(snake);
 
+				control = 0;
+				direction = 2;
+
+				Boardpiece** board = build_board(config);
+				Snakepiece* snake = build_snake(config, board);
+				snake->snake_length = config->init_snake_length;
+			}
 
 		// Neuer, aktualisierter Aufbau des Boards
 
@@ -225,9 +237,7 @@ int main()
 	
 		sfRenderWindow_drawText(window, text_obj_score, NULL);
 		sfRenderWindow_drawText(window, explain_text_obj_score,NULL);
-		printf("n \n");
 		
-
 		//DISPLAY
 		sfRenderWindow_display(window); //Anzeigen des aktuellen Zustands der Grafikelemente auf dem Ausgabefenster
 
@@ -296,10 +306,12 @@ void Pause(sfRenderWindow* window) {
 	}
 }
 
-int game_over(sfRenderWindow* window) {
+int game_over(sfRenderWindow* window,char* txt_buffer) {
 
 	sfEvent sf_event; //hier werden Ereignisse wie z.B. Mausklicks, Tastatureingaben gespeichert
 	sfFont* font = sfFont_createFromFile("arial.ttf"); //über den Zeiger font, kann man die Schriftart für ein Textelement festlegen.
+	sfText* text_score;
+	sfText* explain_text_obj_score;
 	sfText* explain_text_obj_game_over;
 	sfText* explain_text_obj_game_continue; //eklärenden der Text zur Scoreausgabe
 	sfVector2f text_pos;
@@ -308,7 +320,21 @@ int game_over(sfRenderWindow* window) {
 	// Postition Text
 	text_pos.y = 100;
 	text_pos.x = 20;  // x-Postion nach rechts schieben
+
+	explain_text_obj_score = sfText_create();
+	sfText_setFont(explain_text_obj_score, font);
+	sfText_setPosition(explain_text_obj_score, text_pos);
+	sfText_setString(explain_text_obj_score, "Score:");
+
+	text_pos.x += 100;
 	//Text Score
+	text_score = sfText_create();
+	sfText_setFont(text_score, font);
+	sfText_setPosition(text_score, text_pos);
+	sfText_setString(text_score, txt_buffer);
+	text_pos.x -= 100;
+	text_pos.y += 200;
+
 	explain_text_obj_game_over = sfText_create(); //Erzeugen eines Textobjekte
 	sfText_setFont(explain_text_obj_game_over, font);
 	sfText_setPosition(explain_text_obj_game_over, text_pos);
@@ -321,7 +347,8 @@ int game_over(sfRenderWindow* window) {
 	sfText_setPosition(explain_text_obj_game_continue, text_pos);
 	sfText_setString(explain_text_obj_game_continue, "Enter Taste drücken für weiter");
 
-
+	sfRenderWindow_drawText(window, explain_text_obj_score, NULL);
+	sfRenderWindow_drawText(window, text_score, NULL);
 	sfRenderWindow_drawText(window, explain_text_obj_game_over, NULL);
 	sfRenderWindow_drawText(window, explain_text_obj_game_continue, NULL);
 
@@ -398,20 +425,24 @@ struct Config* get_config() {
 		i++;
 	}
 	fclose(fp);
+	config->red  = sfColor_fromRGB(255, 60, 20);
+	config->gras = sfColor_fromRGB(20, 150, 0);
+	config->body = sfColor_fromRGB(255, 204, 229);
+	config->head = sfColor_fromRGB(225, 80, 150);
+
+
 	return config;
 }
 
 Boardpiece** build_board(Config* config) {
 
-	sfColor color;
-
+	
 	/*Speicher reservieren für die Boardpiece-Zeiger(=num_row)*/
 
 	Boardpiece** board = (Boardpiece**)malloc(config->row * sizeof(Boardpiece));
 	for (int i = 0; i <= config->row; i++) {
 		board[i] = (Boardpiece*)malloc(config->row * sizeof(Boardpiece));
 	}
-
 
 	// Initialisiere Board
 
@@ -423,17 +454,18 @@ Boardpiece** build_board(Config* config) {
 			sfRectangleShape_setPosition(board[i][k].game_element, board[i][k].element_position);
 			sfRectangleShape_setSize(board[i][k].game_element, config->element_size);
 
-			sfRectangleShape_setFillColor(board[i][k].game_element, sfGreen);
+			sfRectangleShape_setFillColor(board[i][k].game_element, config->gras);
 			sfRectangleShape_setOutlineThickness(board[i][k].game_element, 0.1 * config->element_width);
-			sfRectangleShape_setOutlineColor(board[i][k].game_element, sfBlack);
+			sfRectangleShape_setOutlineColor(board[i][k].game_element,sfBlack);
 
-			// dirty Lösung über Farbvergleich, Schwarzer Rand entlang des Boardes
+			//Lösung über Farbvergleich, Schwarzer Rand entlang des Boardes
 			if (i == 0 || k == 0 || i == config->row - 1 || k == config->row - 1) {
 				sfRectangleShape_setFillColor(board[i][k].game_element, sfBlack);
-				sfRectangleShape_setOutlineThickness(board[i][k].game_element, 0);
+				sfRectangleShape_setOutlineThickness(board[i][k].game_element, 10);
 			}
 		}
 	}
+	
 	return board;
 }
 
@@ -442,6 +474,7 @@ Snakepiece* build_snake(Config* config , Boardpiece** board) {
 	/*Speicher reservieren für die Snake-Zeiger(=num_row)*/
 	Snakepiece* snake = (Snakepiece*)malloc((config->init_snake_length) * sizeof(Snakepiece));
 
+	
 
 	//X Y Pos Schlange feslgene auf Mitte
 	for (int i = 0; i < config->init_snake_length; i++) {
@@ -450,10 +483,10 @@ Snakepiece* build_snake(Config* config , Boardpiece** board) {
 	}
 
 	//Schlangekopf Setzen an pos
-	sfRectangleShape_setFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element, sfBlue); //Kopf
+	sfRectangleShape_setFillColor(board[snake[0].snakeypos][snake[0].snakexpos].game_element, config->head); //Kopf
 
 	for (int j = 1; j < config->init_snake_length; j++) {
-		sfRectangleShape_setFillColor(board[snake[j].snakeypos][snake[j].snakexpos].game_element, snake->Body); // Körper
+		sfRectangleShape_setFillColor(board[snake[j].snakeypos][snake[j].snakexpos].game_element, config->body); // Körper
 	}
 	return snake;
 
